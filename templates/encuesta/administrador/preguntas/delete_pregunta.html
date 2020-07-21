@@ -1,0 +1,46 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<h1 class="h3 mb-2 text-gray-800">Gestion de pregunta</h1>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Agregar una pregunta</h6>
+    </div>
+    <div class="card-body">
+        <div id="delete_success" class="alert alert-success" role="alert" style="visibility: hidden;">
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">Dominio</label>
+                <select class="form-control" name="dominioSelect" id="dominioSelect">
+                    <option>---</option>
+                    <option>Politica de seguridad</option>
+                    <option>Organizacion de la seguridad informatica</option>
+                    <option>Administracion activos</option>
+                    <option>Seguridad recursos humanos</option>
+                    <option>Seguridad fisica y ambiental</option>
+                    <option>Administracion, comunicacion y operaciones</option>
+                    <option>Control de accesos</option>
+                    <option>Adquision, desarrollo y mantemiento de sistemas informaticos</option>
+                    <option>Administracion de incidentes de seguridad informatica</option>
+                    <option>Administracion continuidad de negocios</option>
+                    <option>Cumplimiento</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">Subdominio</label>
+                <select class="form-control" name="subdominioSelect" id="subdominioSelect">
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="exampleFormControlTextarea1">Example textarea</label>
+                <textarea class="form-control" name="pregunta" id="pregunta" rows="3"></textarea>
+            </div>
+            <br>
+            <button class="btn btn-primary" type="submit">Crear</button>
+        </form>
+    </div>
+</div>
+{% endblock content %}

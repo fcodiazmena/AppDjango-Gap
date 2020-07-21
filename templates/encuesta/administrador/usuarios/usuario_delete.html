@@ -1,0 +1,173 @@
+{% extends "base/base.html" %}
+
+{% block sidebar %}
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+  <!-- Sidebar - Brand -->
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
+    <div class="sidebar-brand-icon rotate-n-15">
+      <i class="fas fa-bullhorn"></i>
+    </div>
+    <div class="sidebar-brand-text mx-3">Analisis GAP</div>
+  </a>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider my-0">
+
+  <!-- Nav Item - Dashboard -->
+  <li class="nav-item active">
+    <a class="nav-link" href="{% url 'index' %}">
+      <i class="fas fa-fw fa-tachometer-alt"></i>
+      <span>Inicio</span></a>
+  </li>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider">
+
+  <!-- Heading -->
+  <div class="sidebar-heading">
+    Usuarios
+  </div>
+
+    <!-- Nav Item - Pages Collapse Menu -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true"
+        aria-controls="collapseTwo">
+        <i class="fas fa-fw fa-cog"></i>
+        <span>Gestion de usuario</span>
+      </a>
+      <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+          <h6 class="collapse-header"><a href="{% url 'usuario_list' %}">Ver usuarios</a>
+          </h6>
+          <a class="collapse-item"
+            href="{% url 'usuario_add' %}">Agregar usuario</a>
+          <a class="collapse-item"
+            href="{% url 'usuario_delete' %}">Eliminar usuario</a>
+          <div class="collapse-divider"></div>
+        </div>
+    </li>
+    <hr class="sidebar-divider d-none d-md-block">
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Resultados
+    </div>
+  
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true"
+          aria-controls="collapseThree">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Resultados</span>
+        </a>
+        <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header"><a href="#">Empresas</a>
+            </h6>
+            {% for empresa in empresas %}
+            <a class="collapse-item"
+              href="{% url 'resultado' empresa.id %}">{{empresa.nombre}}</a>   
+            {% endfor %}
+            <div class="collapse-divider"></div>
+          </div>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+  <!-- Heading -->
+  <div class="sidebar-heading">
+    Preguntas
+  </div>
+
+    <!-- Nav Item - Pages Collapse Menu -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true"
+        aria-controls="collapseFour">
+        <i class="fas fa-fw fa-cog"></i>
+        <span>Gestion de preguntas</span>
+      </a>
+      <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+          <h6 class="collapse-header"><a href="#">Ver preguntas</a>
+          </h6>
+          <a class="collapse-item"
+          href="{% url 'admin_pregunta_add' %}">Agregar pregunta</a>
+        </div>
+    </li>
+    <hr class="sidebar-divider d-none d-md-block">
+
+  <!-- Sidebar Toggler (Sidebar) -->
+  <div class="text-center d-none d-md-inline">
+    <button class="rounded-circle border-0" id="sidebarToggle"></button>
+  </div>
+
+</ul> 
+{% endblock sidebar %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-gray-800">Gestion de usuario</h1>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Seleccione un usuario para eliminar</h6>
+    </div>
+    <div class="card-body">
+        <div id="delete_success" class="alert alert-success" role="alert" style="visibility: hidden;">
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <label>Seleccione un usuario</label>
+            {{ form.usuario }}
+            <br>
+            <button class="btn btn-danger" id="btn-submit" type="submit" href="#" data-toggle="modal" data-target="#deleteUser">Eliminar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteUser" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">¿Estas seguro de eliminar al usuario?</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">Presiona Eliminar para confirmar</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger" id="delete_user" type="submit">Eliminar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+    $('#btn-submit').on('click',function(event){
+        event.preventDefault();
+    });
+
+    $('#delete_user').on('click', function(event){
+        event.preventDefault();
+        let msg = document.getElementById("delete_success");
+        $.ajax({
+        url: '{% url "usuario_delete" %}',
+        type: 'post',
+        data: {
+            'csrfmiddlewaretoken': jQuery("[name=csrfmiddlewaretoken]").val(),
+            'usuario': $('#id_usuario').val()
+        },
+        success: function (data) {
+            if (data['ok'] == true){
+                msg.style.visibility = 'visible';
+                $('#delete_sucess').text(data['mensaje']);
+                $('#deleteUser').modal('hide')
+                setTimeout(() => {
+                    window.location.replace('{% url "usuario_list" %}');
+                }, 2000);
+            }
+        }
+        });
+    })
+</script>
+{% endblock javascript %}

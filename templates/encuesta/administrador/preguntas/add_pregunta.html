@@ -1,0 +1,172 @@
+{% extends "base/base.html" %}
+
+{% block sidebar %}
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+    <!-- Sidebar - Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
+      <div class="sidebar-brand-icon rotate-n-15">
+        <i class="fas fa-bullhorn"></i>
+      </div>
+      <div class="sidebar-brand-text mx-3">Analisis GAP</div>
+    </a>
+  
+    <!-- Divider -->
+    <hr class="sidebar-divider my-0">
+  
+    <!-- Nav Item - Dashboard -->
+    <li class="nav-item active">
+      <a class="nav-link" href="{% url 'index' %}">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Inicio</span></a>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Usuarios
+    </div>
+  
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true"
+          aria-controls="collapseTwo">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Gestion de usuario</span>
+        </a>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header"><a href="{% url 'usuario_list' %}">Ver usuarios</a>
+            </h6>
+            <a class="collapse-item"
+              href="{% url 'usuario_add' %}">Agregar usuario</a>
+            <a class="collapse-item"
+              href="{% url 'usuario_delete' %}">Eliminar usuario</a>
+            <div class="collapse-divider"></div>
+          </div>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Resultados
+      </div>
+    
+        <!-- Nav Item - Pages Collapse Menu -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true"
+            aria-controls="collapseThree">
+            <i class="fas fa-fw fa-cog"></i>
+            <span>Resultados</span>
+          </a>
+          <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header"><a href="#">Empresas</a>
+              </h6>
+              {% for empresa in empresas %}
+              <a class="collapse-item"
+                href="{% url 'resultado' empresa.id %}">{{empresa.nombre}}</a>   
+              {% endfor %}
+              <div class="collapse-divider"></div>
+            </div>
+        </li>
+        <hr class="sidebar-divider d-none d-md-block">
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Preguntas
+    </div>
+  
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true"
+          aria-controls="collapseFour">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Gestion de preguntas</span>
+        </a>
+        <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header"><a href="#">Ver preguntas</a>
+            </h6>
+            <a class="collapse-item"
+            href="{% url 'admin_pregunta_add' %}">Agregar pregunta</a>
+          </div>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+  
+    <!-- Sidebar Toggler (Sidebar) -->
+    <div class="text-center d-none d-md-inline">
+      <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+  
+  </ul> 
+{% endblock sidebar %}
+
+{% block content %}
+<h1 class="h3 mb-2 text-gray-800">Gestion de pregunta</h1>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Agregar una pregunta</h6>
+    </div>
+    <div class="card-body">
+        <div id="delete_success" class="alert alert-success" role="alert" style="visibility: hidden;">
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">Dominio</label>
+                <select class="form-control" name="dominioSelect" id="dominioSelect">
+                    <option>---</option>
+                    <option>Politica de seguridad</option>
+                    <option>Organizacion de la seguridad informatica</option>
+                    <option>Administracion activos</option>
+                    <option>Seguridad recursos humanos</option>
+                    <option>Seguridad fisica y ambiental</option>
+                    <option>Administracion, comunicacion y operaciones</option>
+                    <option>Control de accesos</option>
+                    <option>Adquision, desarrollo y mantemiento de sistemas informaticos</option>
+                    <option>Administracion de incidentes de seguridad informatica</option>
+                    <option>Administracion continuidad de negocios</option>
+                    <option>Cumplimiento</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">Subdominio</label>
+                <select class="form-control" name="subdominioSelect" id="subdominioSelect">
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="exampleFormControlTextarea1">Example textarea</label>
+                <textarea class="form-control" name="pregunta" id="pregunta" rows="3"></textarea>
+            </div>
+            <br>
+            <button class="btn btn-primary" type="submit">Crear</button>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+    $('#dominioSelect').on('change', function(){
+        let dominio = $('#dominioSelect').val();
+        $.ajax({
+        url: '{% url "admin_pregunta_add" %}',
+        type: 'get',
+        data: {
+            'dominio': dominio
+        },
+        success: function (data) {
+            $('#subdominioSelect').empty();
+            let html = ""
+            for (let i = 0; i < data['subdominios'].length; i++) {
+                html += '<option>' + data['subdominios'][i] + '</option>'
+            }
+
+            $('#subdominioSelect').append(html);
+        }
+        });
+    })
+</script>
+{% endblock javascript %}

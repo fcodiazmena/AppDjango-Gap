@@ -1,0 +1,175 @@
+{% extends 'base/base.html' %}
+
+{% block sidebar %}
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+  <!-- Sidebar - Brand -->
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
+    <div class="sidebar-brand-icon rotate-n-15">
+      <i class="fas fa-bullhorn"></i>
+    </div>
+    <div class="sidebar-brand-text mx-3">Analisis GAP</div>
+  </a>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider my-0">
+
+  <!-- Nav Item - Dashboard -->
+  <li class="nav-item active">
+    <a class="nav-link" href="{% url 'index' %}">
+      <i class="fas fa-fw fa-tachometer-alt"></i>
+      <span>Inicio</span></a>
+  </li>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider">
+  {% if request.user.usuario.administrador == False %}
+  <!-- Heading -->
+  <div class="sidebar-heading">
+    Dominios
+  </div>
+
+  <!-- Nav Item - Pages Collapse Menu -->
+  <li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true"
+      aria-controls="collapseTwo">
+      <i class="fas fa-fw fa-cog"></i>
+      <span>Dominios</span>
+    </a>
+    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+      <div class="bg-white py-2 collapse-inner rounded">
+        {% for dom in dominios %}
+        <h6 class="collapse-header"><a href="{% url 'pregunta_list' dom.id %}">{{dom.nombre | truncatechars:25}}</a>
+        </h6>
+        {% for subdom in dom.subdominios %}
+        <a class="collapse-item"
+          href="{% url 'subdominio_list' dom.id subdom.id %}">{{subdom.nombre | truncatechars:22}}</a>
+        {% endfor %}
+        <div class="collapse-divider"></div>
+        {% endfor %}
+      </div>
+  </li>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider d-none d-md-block">
+  {% else %}
+  <!-- Heading -->
+  <div class="sidebar-heading">
+    Usuarios
+  </div>
+
+    <!-- Nav Item - Pages Collapse Menu -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true"
+        aria-controls="collapseTwo">
+        <i class="fas fa-fw fa-cog"></i>
+        <span>Gestion de usuario</span>
+      </a>
+      <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+          <h6 class="collapse-header"><a href="{% url 'usuario_list' %}">Ver usuarios</a>
+          </h6>
+          <a class="collapse-item"
+            href="{% url 'usuario_add' %}">Agregar usuario</a>
+          <a class="collapse-item"
+            href="{% url 'usuario_delete' %}">Eliminar usuario</a>
+          <div class="collapse-divider"></div>
+        </div>
+    </li>
+    <hr class="sidebar-divider d-none d-md-block">
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Resultados
+    </div>
+  
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true"
+          aria-controls="collapseThree">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Resultados</span>
+        </a>
+        <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header"><a href="#">Empresas</a>
+            </h6>
+            {% for empresa in empresas %}
+            <a class="collapse-item"
+              href="{% url 'resultado' empresa.id %}">{{empresa.nombre}}</a>
+            {% endfor %}
+            <div class="collapse-divider"></div>
+          </div>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Preguntas
+    </div>
+  
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true"
+          aria-controls="collapseFour">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Gestion de preguntas</span>
+        </a>
+        <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header"><a href="#">Ver preguntas</a>
+            </h6>
+            <a class="collapse-item"
+            href="{% url 'admin_pregunta_add' %}">Agregar pregunta</a>
+            <div class="collapse-divider"></div>
+          </div>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+  {% endif %}
+
+  <!-- Sidebar Toggler (Sidebar) -->
+  <div class="text-center d-none d-md-inline">
+    <button class="rounded-circle border-0" id="sidebarToggle"></button>
+  </div>
+
+</ul>
+{% endblock sidebar %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-gray-800">Inicio</h1>
+{% if request.user.usuario.administrador == False %}
+<div class="card shadow mb-4">
+  <div class="card-header py-3">
+    <h6 class="m-0 font-weight-bold text-primary">Encuesta GAP para la empresa
+      {{request.user.usuario.empresa.nombre}}</h6>
+  </div>
+  <div class="card-body">
+    Bienvenido a la encuesta para el analisis gap. Esta encuesta fue destinada para la empresa
+    <strong>{{request.user.usuario.empresa.nombre}}</strong> para evaluar las diferencias entre el desempeño real y el
+    desempeño
+    esperado dentro de esta. Favor responder <strong style="color: red;">cada una de las preguntas con
+      sinceridad.</strong>
+  </div>
+</div>
+{% else %}
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+<div class="card shadow mb-4">
+  <div class="card-header py-3">
+    <h6 class="m-0 font-weight-bold text-primary">Bienvenido al panel de control de la aplicación Encuesta GAP</h6>
+  </div>
+  <div class="card-body">
+    Bienvenido al panel de control de la aplicación Encuesta GAP. Aqui puede realizar funciones como agregar usuarios
+    para un nuevo
+    análisis de una empresa, agregar una nueva pregunta al análisis GAP, mostrar gráficos para fines estadísticos, y
+    finalmente poder enviar
+    a tráves de correo electrónico dicha información del gráfico (incluyendo una breve recomendación según el porcentaje
+    que haya sacado en cada uno de los dominios)
+  </div>
+</div>
+{% endif %}
+
+{% endblock content %}

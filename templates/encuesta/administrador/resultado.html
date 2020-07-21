@@ -1,0 +1,394 @@
+{% extends 'base/base.html' %}
+
+{% block sidebar %}
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+    <!-- Sidebar - Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
+      <div class="sidebar-brand-icon rotate-n-15">
+        <i class="fas fa-bullhorn"></i>
+      </div>
+      <div class="sidebar-brand-text mx-3">Analisis GAP</div>
+    </a>
+  
+    <!-- Divider -->
+    <hr class="sidebar-divider my-0">
+  
+    <!-- Nav Item - Dashboard -->
+    <li class="nav-item active">
+      <a class="nav-link" href="{% url 'index' %}">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Inicio</span></a>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Usuarios
+    </div>
+  
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true"
+          aria-controls="collapseTwo">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Gestion de usuario</span>
+        </a>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header"><a href="{% url 'usuario_list' %}">Ver usuarios</a>
+            </h6>
+            <a class="collapse-item"
+              href="{% url 'usuario_add' %}">Agregar usuario</a>
+            <a class="collapse-item"
+              href="{% url 'usuario_delete' %}">Eliminar usuario</a>
+            <div class="collapse-divider"></div>
+          </div>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Resultados
+      </div>
+    
+        <!-- Nav Item - Pages Collapse Menu -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true"
+            aria-controls="collapseThree">
+            <i class="fas fa-fw fa-cog"></i>
+            <span>Resultados</span>
+          </a>
+          <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header"><a href="#">Empresas</a>
+              </h6>
+              {% for empresa in empresas %}
+              <a class="collapse-item"
+                href="{% url 'resultado' empresa.id %}">{{empresa.nombre}}</a>   
+              {% endfor %}
+              <div class="collapse-divider"></div>
+            </div>
+        </li>
+        <hr class="sidebar-divider d-none d-md-block">
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Preguntas
+    </div>
+  
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true"
+          aria-controls="collapseFour">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Gestion de preguntas</span>
+        </a>
+        <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header"><a href="#">Ver preguntas</a>
+            </h6>
+            <a class="collapse-item"
+            href="{% url 'admin_pregunta_add' %}">Agregar pregunta</a>
+          </div>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+  
+    <!-- Sidebar Toggler (Sidebar) -->
+    <div class="text-center d-none d-md-inline">
+      <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+  
+  </ul>  
+{% endblock sidebar %}
+
+{% block content %}
+    <canvas id="myChart" width="80" height="80"></canvas>
+    <br>
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Recomendaciones</h6>
+      </div>
+      <div class="card-body">
+        <table id="mi_tabla" class="table table-bordered">
+        </table>
+      </div>
+    </div>
+
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Enviar datos</h6>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="exampleFormControlTextarea1">Escribir mensaje</label>
+            <textarea class="form-control" name="mensaje_correo" id="exampleFormControlTextarea1" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+      </div>
+    </div>
+{% endblock content %}
+
+{% block javascript %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script>
+        var datos = JSON.parse('{{ data | safe | escape}}');
+        //console.log(datos);
+
+        var html = "";
+
+        for (let i = 0; i < datos.length; i++) {
+          
+          let pc = (datos[i]['Verdadero']/datos[i]['Total'])*100;
+          let pn = (datos[i]['Falso']/datos[i]['Total'])*100;
+          let na = (datos[i]['NA']/datos[i]['Total'])*100;
+          let conclusion = "";
+          let recomendacion = "";
+
+          if (datos[i]['Nombre'] == 'Politica de seguridad'){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa en términos de política de seguridad se encuentra en un estado crítico, ya que está del todo claro si existen políticas de seguridad de la información o tiene conocimiento de dichas políticas, además no se realiza una revisión en intervalos de tiempo previamente planificados';
+              recomendacion = '<li>Comprobación de políticas de seguridad existentes , si no existieran estas deberían de ser creadas y enviadas a la gerencia para un aprobacion pronta</li><li>Planificar de revisión de seguridad</li><li>Promulgación de las políticas de seguridad en la empresa</li>'
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa en términos de política de seguridad se encuentra en un estado neutral, ya que no todo el personal conoce dichas políticas y las revisiones son esporádicas';
+              recomendacion = '<li>Promulgación de las políticas de seguridad en la empresa y que se verifique que ellos las conozcan</li><li>Aumentar la frecuencia de las revisiones de las políticas.</li>'
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa en términos de política de seguridad se encuentra estable pero aun asi le entregamos unas recomendaciones para mantener este buen desempeño';
+              recomendacion = '<li>Comprobación de los resultados de la revisiones</li><li>Designar un encargado para las políticas de seguridad en el caso de que no existiese</li>'
+            }
+          } else if (datos[i]['Nombre'] == "Organizacion de la seguridad informatica"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la organización de la seguridad informática se encuentra en estado crítico ya que gerencia no muestra interés sobre la seguridad de la información por lo que no hay coordinación de los representantes de las distintas áreas de la empresa';
+              recomendacion = '<li>Asignación de responsabilidades para las políticas de seguridad de la empresa</li><li>Abordar la seguridad de la información por falta de coordinación, distribución, confidencialidad, contactos internos y externos vinculados a la seguridad informática</li>'
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la organización de la seguridad informática se encuentra en un estado neutral ya que aún no están bien definidas las responsabilidades de la seguridad de la información o faltan representantes de áreas de la empresa a los que asignar dichas responsabilidades.';
+              recomendacion = '<li>Verificar que cada área tenga un representante.</li><li>Realizar un proceso de autorización gerencial para facilidades de obtención de información.</li>'
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la organización de la seguridad informática se encuentra estable por lo que entrega';
+              recomendacion = '<li>Mantener un control de acceso a la información de la empresa hacia terceros.</li><li>Mantener un apoyo activo de las medidas de seguridad por parte de la gerencia</li>'
+            }
+          } else if (datos[i]['Nombre'] == "Administracion activos"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la organización de la seguridad informática se encuentra en estado crítico ya que gerencia no muestra interés sobre la seguridad de la información por lo que no hay coordinación de los representantes de las distintas áreas de la empresa';
+              recomendacion = '<li>Realizar el registro de los activos lo antes posible.</li><li>Cada activo identificado tener una clasificación de seguridad definida y restricciones de acceso con documentación de los roles responsables</li><li>Realizar una revisión de los activos regularmente de manera planificada y con un encargado para realizar esta tarea.</li><li>Clasificación de la información de los activos que se manejan en la empresa.</li>'
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la organización de la seguridad informática se encuentra en un estado neutral ya que aún no están bien definidas las responsabilidades de la seguridad de la información o faltan representantes de áreas de la empresa a los que asignar dichas responsabilidades.';
+              recomendacion = '<li>Verificar el registro de activos que se encuentre completo y actualizado.</li><li>Verificar que criterios contiene y cuáles no la clasificación información de la empresa.</li>'
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la organización de la seguridad informática se encuentra estable por lo que entrega';
+              recomendacion = '<li>Las regulaciones realizadas debe ser documentadas.</li><li>Mantener los registros de activos actualizados.</li>'
+            }
+          } else if (datos[i]['Nombre'] == "Seguridad recursos humanos"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la seguridad de recursos humanos se encuentra en estado crítico debido a que no se ha hecho una revisión de antecedentes de los candidatos al empleo, además de una ausencia o vago proceso disciplinario para tomar acciones contra empleados que han cometido una infracción de seguridad de la información.';
+              recomendacion = '<li>Revisar antecedentes de los candidatos antes de contratarlos</li><li>Especificar el proceso disciplinario y divulgarlo con todos los empleado de la empresa poniendo énfasis en las consecuencias y la complicidad.</li><li>Establecer las directrices que debe seguir respecto a la seguridad de la información en caso de desvinculación del empleo, documentos de término y condición definidos</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la seguridad de recursos humanos se encuentra en estado neutral ya que el proceso disciplinario no es suficiente o los empleados no lo conoce, ademas de que no hay un control de cumpliendo de las directrices por desvinculación del empleo.';
+              recomendacion = '<li>Asignar a un encargado para verificar el cumplimiento de las directrices de desvinculación de actividades.</li><li>Los roles y responsabilidades requieren ser definidos y documentados de acuerdo con las políticas de la seguridad informática de la organización.</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la seguridad de recursos humanos se encuentra estable por lo que entregamos algunas recomendaciones para reforzar esta situación';
+              recomendacion = '<li>Verificar que los antecedentes de los empleados actualmente contratados siga siendo intachable</li><li>Verificar regularmente, planificado con anterioridad si es posible, el cumplimiento de los estatutos disciplinarios de la empresa.</li>';
+            }
+          } else if (datos[i]['Nombre'] == "Seguridad fisica y ambiental"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la seguridad física y ambiental se encuentra en un estado crítico por la razón de que no posee un perímetro de seguridad para equipos informáticos que posean información de la empresa con control de acceso con por ejemplo tarjetas y/o recepcionista, por otro lado no posee planes de contingencia en caso de desastres naturales o accidentes como por ejemplo incendios.';
+              recomendacion = '<li>Establecer perímetros de seguridad , además de integrarlos al reglamento interno de la empresa.</li><li>Implementar controles de ingreso robustos para el personal existente.</li><li>Tener en cuenta acceso de áreas públicas en todo momento.</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la seguridad física y ambiental se encuentra en un estado neutral debido a los mecanismos actuales de control de acceso y planes de contingencia son insuficientes o no todos conocen de sus existencia.';
+              recomendacion = '<li>Como conclusión, actualmente la empresa con respecto a la seguridad física y ambiental se encuentra en un estado neutral debido a los mecanismos actuales de control de acceso y planes de contingencia son insuficientes o no todos conocen de sus existencia.</li><li>Verificar que los planes de contingencia sigan vigentes incluyendo el equipamiento que requieran como por ejemplo si tienen extintores, que estos se encuentren con carga.</li><li>control de acceso que permita el ingreso de personal autorizado dentro de las áreas de la organización.</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la seguridad física y ambiental se encuentra estable pero aun asi entregamos algunas recomendaciones para consolidarla aún más:';
+              recomendacion = '<li>Realizar mantenimiento regularmente a las tecnologías de control de acceso que posee</li><li>Aumentar la cantidad de personal para el control de acceso y asignar responsables para ejecutar planes de contingencia reactivos en caso de accidentes o catástrofes naturales.</li>';
+            }
+          } else if (datos[i]['Nombre'] == "Administracion, comunicacion y operaciones"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración comunicaciones y operaciones se encuentra en estado crítico debido a que los procedimientos operacionales no están siendo debidamente documentados por lo que gerencia no puede validarlos, por otra parte, los servicios de terceros no están siendo debidamente controlados, no se tiene pleno conocimiento de si existen políticas de intercambio de información y finalmente, la redes tienen una vaga protección contra amenazas.';
+              recomendacion = '<li>Documentar todos los procesos operacionales.</li><li>Realizar procedimientos de monitoreo planificados y verificar que los resultados de dicho monitoreo se realicen los cambios pertinentes</li><li>Realizar políticas de seguridad para el intercambio de información.</li><li>Las redes deben ser controladas y administradas para protegerlas contra amenazas.</li><li>Las redes deben ser controladas y administradas para protegerlas contra amenazas.</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración comunicaciones y operaciones se encuentra en estado neutral debido a que a pesar de poseer políticas de intercambio de información no todos saben de su existencia además la documentación de los proceso de la empresa están teniendo un vago control de cambios ya que se debe pedir la aprobación gerencial y no siempre se da o puede ser que tarde demasiado. Respecto a las redes se debe identificar cada servicio que se utilice en la empresa.';
+              recomendacion = '<li>Asegurarse de que todo el personal conozca las políticas de intercambio de información</li><li>Dividir las redes según el tipo de servicio</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración comunicaciones y operaciones se encuentra estable por lo que se darán algunas recomendaciones con el fin de consolidar aún más esta situación:';
+              recomendacion = '<li>Asignar a un encargado para controlar las redes.</li><li>Verificar el cumplimiento de las políticas de intercambio de información.</li><li>Realizar respaldos de la información de la empresa regularmente.</li>';
+            }        
+          } else if (datos[i]['Nombre'] == "Control de accesos"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto al control de acceso se encuentra en estado crítico debido a que no posee una política de control de acceso eficiente ni física ni lógica tampoco se informa de la misma a cada individuo participe de la empresa , además el proceso de registro de usuario no es claro ni ejecutado de manera sencilla , existe una falencia en la administración de contraseñas de usuario ya que no se efectúan de manera formal ni son controladas por un proceso eficiente.';
+              recomendacion = '<li>Revisar los accesos de cada usuario y mantener un registro del control de acceso.</li><li>Informar a los individuos de la empresa sobre las políticas de control de acceso , la forma de acceder y cómo administrar su contraseña</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto al control de acceso, se encuentra en estado neutral debido a que se ven informadas la políticas de control de acceso a más de la mitad del personal entrevistado ,se ve aplicado de manera correcta el registro de usuarios y el control de acceso de cada uno , pero sin embargo no se ve implementado un control de acceso remoto tampoco se tiene un conocimiento si es que existe un límite de tiempo de conexión definido por tipo de usuario';
+              recomendacion = '<li>Mantener el control de acceso a cada uno de los trabajadores de la empresa.</li><li>Implementar limite de tiempo de conexión por usuario dependiendo el tiempo de trabajo</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto al control de acceso se encuentra en estado estable y óptimo debido a que la gran parte de la empresa posee y ejecuta de manera correcta las políticas de control de acceso además la empresa dispone de un límite de tiempo de conexión dependiendo de el tiempo de trabajo, además existe un procedimiento seguro de Log-on , con el fin de seguir con el buen trabajo de control de acceso';
+              recomendacion = '<li>Mantener un seguimiento de actividad de cada usuario con el fin de analizar el uso de la maquinaria del equipo.</li><li>Gestionar de manera correcta y debida la incorporación de cada trabajador a la empresa</li>';
+            }         
+          }else if (datos[i]['Nombre'] == "Adquision, desarrollo y mantemiento de sistemas informaticos"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la adquisición,desarrollo y mantenimiento de sistemas informáticos se encuentra en estado crítico debido a que no existe un control de procesos internos , menos una integridad en los mensajes entre pares de la empresa esto en cuanto a los procesos en aplicaciones además no existe una implementación debida de las políticas para el uso de controles criptográficos y la administración de llaves no son protegidas en contra la divulgación';
+              recomendacion = '<li>Designar administrador de soporte además de analizar vulneraciones técnicas existentes.</li><li>Informar trabajos sobre la existencia de políticas para el uso de controles criptográficos</li><li>Mejorar la área de seguridad de procesos de Desarrollo y soporte.</li><li>Generar una correcta y debida Administraciones de llaves ante la divulgacion de informacion</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la adquisición,desarrollo y mantenimiento de sistemas informáticos se encuentra en estado neutral debido a que posee e implementa de manera correcta los requisitos que deben tener los sistemas informáticos además las aplicaciones de uso en la empresa cuentan con un correcto flujo en los procesos de ejecución como la validación de input de datos y control en los procesos internos pero tiene falencia en la integridad de los mensajes que se manejan dentro del sistema además de una incierta administración de las llaves criptográficas en específico no se sabe si son protegidas contra divulgación.';
+              recomendacion = '<li>Designar encargado de administrar llaves de seguridad además de brindar soporte en cuanto a los procedimientos establecidos por la empresa y encargado de solucionar vulnerabilidades técnicas.</li><li>Implementación de seguridad que poseen una integración en etapas iniciales de los proyectos</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la adquisición,desarrollo y mantenimiento de sistemas informáticos se encuentra en estado óptimo y adecuado ya que cuenta con todos los requisitos de seguridad y análisis en las especificaciones dentro de los sistemas informáticos implementados además se ejecutan correctamente los procesos en aplicaciones como la validación de datos y el control de procesos internos , posee un buen seguimiento de los controles criptográficos contando con un adecuado cifrado de credenciales.';
+              recomendacion = '<li>Control de vulnerabilidades técnicas sobre la información técnica de los sistemas informáticos para ser obtenida de forma regular.</li>';
+            }           
+          }else if (datos[i]['Nombre'] == "Administracion de incidentes de seguridad informatica"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración de incidentes de seguridad informática se encuentra en estado crítico ya que no se presenta dentro de la empresa un sistema de reporte contra eventos y detección de debilidades en cuanto a la seguridad informática ,tampoco se siguen las normas de las responsabilidades en cuanto a los incidentes producidos , no hay existencia de un reporte en el cual se recolectan evidencia de los eventos producidos en la empresa.';
+              recomendacion = '<li>Reportar eventos en cuanto a siniestros de seguridad en informática al encargado de seguridad</li><li>Recolección de evidencias pertinentes de cada evento ocurrido en cuanto a la seguridad de la empresa mediante la generación de informes</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración de incidentes de seguridad informática se encuentra en estado medio ya que si bien existe un sistema que reporta los eventos ocurridos y además recolecta la información en el momento, no se crea un reporte el cual evidencia la información a futuro y no se exponen las posibles soluciones de seguridad además no se realiza un seguimiento en caso de incidentes efectuados a una persona.';
+              recomendacion = '<li>Proceder a la evaluaciones de situación presente y realizar seguimiento de los hechos ocurridos.</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente a empresa con respecto a la administración de incidentes de seguridad informática se encuentra en estado óptimo ya que cumple con la creación de reportes en casos de eventos de seguridad informática además expone las falencias que tuvo el sistema evidenciándose en cada reporte además se efectúan las responsabilidades y procedimientos pertinentes luego de analizar cada reporte ,también la empresa cuenta con un sistema en caso de incidentes de seguridad realizando el adecuado seguimiento a los individuos en cuestión.';
+              recomendacion = '<li>Sistema de recolección de evidencias para un correcto seguimiento de los incidentes.</li>';
+            }       
+          }else if (datos[i]['Nombre'] == "Administracion continuidad de negocios"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración continua de negocios se encuentra en estado crítico ya que dentro de sus aspectos no existe un proceso administrativo que defina los requisitos de seguridad de negocio dentro de la empresa además de no contemplar los riesgos que puede traer esta falencia no se tiene una continuidad de negocios y evaluación de riesgo al no tener una arquitectura base dentro de la empresa no se realizan pruebas, mantenimiento ni evaluaciones de planes de continuidad de negocios.';
+              recomendacion = '<li>Sistema de negocios el cual entregue información continua y eficiente para el manejo correcto en el ámbito de negocios de la empresa</li><li>Generar pruebas de mantenimiento correspondientes</li><li>Evaluaciones pertinente para una continuidad de negocios efectiva.</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración continua de negocios se encuentra en un estado estable ya que si bien se posee una continuidad en el flujo de la información de procesos administrativos y una arquitectura de planeación de negocios no se realizan pruebas de mantenimiento y una re-evaluación de planes de continuidad en los negocios efectuados en la empresa.';
+              recomendacion = '<li>Como conclusión, actualmente la empresa con respecto a la administración continua de negocios se encuentra en un estado estable ya que si bien se posee una continuidad en el flujo de la información de procesos administrativos y una arquitectura de planeación de negocios no se realizan pruebas de mantenimiento y una re-evaluación de planes de continuidad en los negocios efectuados en la empresa.</li><li>Seguimiento de los mantenimientos realizados en los sistemas de negocios que utiliza la empresa</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto a la administración continua de negocios se encuentra en optimo y adecuado ya que la empresa lleva una revisión fluida de sus procesos de negocio además de poseer una arquitectura eficaz la cual luego de ejecutar los procesos realiza las pruebas y mantenimiento pertinente de cada uno garantizando la continuidad y el funcionamiento interno de la empresa.';
+              recomendacion = '<li>Procesos continuos de negocio para un buen funcionamiento empresarial</li>';
+            }     
+          }else if (datos[i]['Nombre'] == "Cumplimiento"){
+            if (pc >= 0 && pc <= 25){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto al cumplimiento se encuentra en estado crítico ya que dentro de sus aspectos no existe una identificación de legislación aplicable ni contratos además de regulaciones pertinentes de la empresa , se pasan por alto los derechos de propiedad intelectual dejando de lado los procedimientos y controles que se deben realizar para su entendimiento con la legislación implementada.';
+              recomendacion = '<li>Identificar de manera correcta cada elemento relevante en cuanto a las regulaciones contratos que la empresa posee. y realización de cumplimientos técnicos</li><li>Dejar en claro cada derecho de propiedad intelectual antes las entidades del estado.</li>';
+            } else if (pc >= 26 && pc <= 65){
+              conclusion = 'Como conclusión, actualmente la empresa con respecto al cumplimiento se encuentra en estado neutral ya que si bien se tienen identificadas las medidas y regulaciones pertinentes de la empresa no se declararon desde un principio los derechos de propiedades intelectuales tampoco se registraron de manera permanente , si existe una protección correcta de los datos pero no existe una revisión del cumplimiento técnico generado por la empresa.';
+              recomendacion = '<li>Implementación de un sistema de auditoría informáticos.</li><li>Registrar de manera permanente los derechos de propiedad intelectual</li>';
+            } else {
+              conclusion = 'Como conclusión, actualmente la empresa con respecto al cumplimiento se encuentra en estado óptimo ya que estipula de manera correcta la legislación aplicable que la empresa puede tener, además de estipular de manera correcta y permanente todos los derechos de propiedad intelectual que la empresa posee ,cuenta con proteccion de registro organizacionales en caso de pérdida de datos , se genera una revisión del cumplimiento técnico de la organización y posee controles de auditoría de los sistemas informáticos disponibles en la empresa.';
+              recomendacion = '<li>Auditoría de retroalimentación para ser analizado por la empresa para su deber de cumplimiento</li>';
+            }       
+          }
+
+          html += 
+          '<thead><tr><th scope="col">#</th><th scope="col" colspan="5">' + datos[i]['Nombre'] +'</th></tr></thead> \
+          <tbody><tr><th scope="row">Porcentaje cumplido</th><td>' + pc.toFixed(2)+'%' + '</td><td>' + conclusion + '</td><td>' + recomendacion + '</td></tr></tbody>';
+        }
+
+        $('#mi_tabla').append(html);
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [datos[0]['Nombre'], datos[1]['Nombre'], datos[2]['Nombre'], datos[3]['Nombre'], datos[4]['Nombre'], datos[5]['Nombre'], datos[6]['Nombre'], datos[7]['Nombre'], datos[8]['Nombre'], datos[9]['Nombre'], datos[10]['Nombre']],
+                datasets: [{
+                    label: 'Verdadero',
+                    data: [datos[0]['Verdadero'], datos[1]['Verdadero'], datos[2]['Verdadero'], datos[3]['Verdadero'], datos[4]['Verdadero'], datos[5]['Verdadero'], datos[6]['Verdadero'], datos[7]['Verdadero'], datos[8]['Verdadero'], datos[9]['Verdadero'], datos[10]['Verdadero']],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 0.2)'
+
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 99, 132, 1)',
+                    ],
+                    borderWidth: 1
+                },
+                {
+                    label: 'Falso',
+                    data: [datos[0]['Falso'], datos[1]['Falso'], datos[2]['Falso'], datos[3]['Falso'], datos[4]['Falso'], datos[5]['Falso'], datos[6]['Falso'], datos[7]['Falso'], datos[8]['Falso'], datos[9]['Falso'], datos[10]['Falso']],
+                    backgroundColor: [
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)',
+                        'rgba(41, 33, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)',
+                        'rgba(41, 33, 255, 1)'
+                    ],
+                    borderWidth: 1
+                },
+                {
+                    label: 'NA',
+                    data: [datos[0]['NA'], datos[1]['NA'], datos[2]['NA'], datos[3]['NA'], datos[4]['NA'], datos[5]['NA'], datos[6]['NA'], datos[7]['NA'], datos[8]['NA'], datos[9]['NA'], datos[10]['NA']],
+                    backgroundColor: [
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)',
+                        'rgba(5, 255, 9, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)',
+                        'rgba(5, 255, 9, 1)'
+                    ],
+                    borderWidth: 1
+                },
+                ]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+    
+{% endblock javascript %}

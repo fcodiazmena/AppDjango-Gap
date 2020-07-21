@@ -1,0 +1,101 @@
+{% extends "base/base.html" %}
+
+{% block sidebar %}
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+    <!-- Sidebar - Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
+      <div class="sidebar-brand-icon rotate-n-15">
+        <i class="fas fa-bullhorn"></i>
+      </div>
+      <div class="sidebar-brand-text mx-3">Analisis GAP</div>
+    </a>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider my-0">
+
+    <!-- Nav Item - Dashboard -->
+    <li class="nav-item active">
+      <a class="nav-link" href="{% url 'index' %}">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Inicio</span></a>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+      Dominios
+    </div>
+
+    <!-- Nav Item - Pages Collapse Menu -->
+    <li class="nav-item">
+      <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+        <i class="fas fa-fw fa-cog"></i>
+        <span>Dominios</span>
+      </a>
+      <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            {% for dom in dominios %}
+              <h6 class="collapse-header"><a href="{% url 'pregunta_list' dom.id %}">{{dom.nombre | truncatechars:25}}</a></h6>
+              {% for subdom in dom.subdominios %}
+                  <a class="collapse-item" href="{% url 'subdominio_list' dom.id subdom.id %}">{{subdom.nombre | truncatechars:22}}</a>
+              {% endfor %}
+              <div class="collapse-divider"></div>
+            {% endfor %}
+          </div>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider d-none d-md-block">
+
+    <!-- Sidebar Toggler (Sidebar) -->
+    <div class="text-center d-none d-md-inline">
+      <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+
+  </ul>
+{% endblock sidebar %}
+
+{% block content %}
+    <form id="my_form" method="POST">
+        {% csrf_token %}
+        <div class="card shadow mb-4">
+          <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{subdominio.nombre}}</h6>
+          </div>
+          <div class="card-body">
+            {% for pregunta in preguntas %}
+            <label>{{pregunta.titulo}}</label>
+            <ul>
+              {% if pregunta.id in respondida %}
+                <li>
+                  <label>Pregunta ya respondida</label>
+                </li>
+              {% else %}
+                <li>
+                  <input type="radio" name="opcion{{pregunta.id}}" value="Verdadero">
+                  <label>Verdadero</label>
+                </li>
+                <li>
+                  <input type="radio" name="opcion{{pregunta.id}}" value="Falso">
+                  <label>Falso</label><br>
+                </li>
+              {% endif %}
+            </ul>
+            {% endfor %}
+          </div>
+        </div>
+        <button type="submit">Aceptar</button>
+    </form>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+	$('form').dirtyForms({
+		message: 'You forgot to save your details. If you leave now, they will be lost forever.'
+	});
+
+</script>
+{% endblock javascript %}
